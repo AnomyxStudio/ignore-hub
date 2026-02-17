@@ -1,12 +1,12 @@
-import type { TemplateMeta } from "../domain/types";
 import { normalizeTemplateName } from "../domain/classification";
+import type { TemplateMeta } from "../domain/types";
 
 const TEMPLATE_ALIASES: Record<string, string[]> = {
   js: ["javascript"],
   nodejs: ["node"],
   ts: ["typescript"],
   csharp: ["csharp", "c#"],
-  py: ["python"]
+  py: ["python"],
 };
 
 export interface TemplateResolutionMatch {
@@ -14,15 +14,15 @@ export interface TemplateResolutionMatch {
 }
 
 export interface TemplateResolutionIssue {
+  matches: TemplateMeta[];
   query: string;
   rawQuery: string;
   type: "unknown" | "ambiguous";
-  matches: TemplateMeta[];
 }
 
 export interface TemplateResolutionResult {
-  selected: TemplateMeta[];
   issues: TemplateResolutionIssue[];
+  selected: TemplateMeta[];
 }
 
 function normalize(query: string): string {
@@ -34,7 +34,9 @@ function dedupeTemplateIds(templates: TemplateMeta[]): TemplateMeta[] {
   const output: TemplateMeta[] = [];
 
   for (const template of templates) {
-    if (seen.has(template.id)) continue;
+    if (seen.has(template.id)) {
+      continue;
+    }
     seen.add(template.id);
     output.push(template);
   }
@@ -44,7 +46,7 @@ function dedupeTemplateIds(templates: TemplateMeta[]): TemplateMeta[] {
 
 function templateMatchesQuery(
   template: TemplateMeta,
-  normalizedQuery: string,
+  normalizedQuery: string
 ): boolean {
   const normalizedId = normalize(template.id);
   const normalizedName = normalize(template.name);
@@ -58,7 +60,7 @@ function templateMatchesQuery(
 
 function templateMatchesExact(
   template: TemplateMeta,
-  normalizedQuery: string,
+  normalizedQuery: string
 ): boolean {
   const normalizedId = normalize(template.id);
   const normalizedName = normalize(template.name);
@@ -67,48 +69,59 @@ function templateMatchesExact(
 
 function templateStartsWithQuery(
   template: TemplateMeta,
-  normalizedQuery: string,
+  normalizedQuery: string
 ): boolean {
   const normalizedId = normalize(template.id);
   const normalizedName = normalize(template.name);
-  return normalizedId.startsWith(normalizedQuery) || normalizedName.startsWith(normalizedQuery);
+  return (
+    normalizedId.startsWith(normalizedQuery) ||
+    normalizedName.startsWith(normalizedQuery)
+  );
 }
 
 function sortTemplates(templates: TemplateMeta[]): TemplateMeta[] {
-  return [...templates].sort((a, b) =>
-    a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+  return [...templates].sort(
+    (a, b) =>
+      a.kind.localeCompare(b.kind) ||
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
   );
 }
 
 function makeMatchQueryCandidates(
   templates: TemplateMeta[],
-  normalizedQuery: string,
+  normalizedQuery: string
 ): TemplateMeta[] {
   return sortTemplates(
     dedupeTemplateIds(
-      templates.filter((template) => templateMatchesQuery(template, normalizedQuery))
+      templates.filter((template) =>
+        templateMatchesQuery(template, normalizedQuery)
+      )
     )
   );
 }
 
 function makeExactCandidates(
   templates: TemplateMeta[],
-  normalizedQuery: string,
+  normalizedQuery: string
 ): TemplateMeta[] {
   return sortTemplates(
     dedupeTemplateIds(
-      templates.filter((template) => templateMatchesExact(template, normalizedQuery)),
-    ),
+      templates.filter((template) =>
+        templateMatchesExact(template, normalizedQuery)
+      )
+    )
   );
 }
 
 function makeFallbackCandidates(
   templates: TemplateMeta[],
-  normalizedQuery: string,
+  normalizedQuery: string
 ): TemplateMeta[] {
   return sortTemplates(
     dedupeTemplateIds(
-      templates.filter((template) => templateStartsWithQuery(template, normalizedQuery))
+      templates.filter((template) =>
+        templateStartsWithQuery(template, normalizedQuery)
+      )
     )
   );
 }
@@ -120,9 +133,11 @@ function expandAliases(query: string): string[] {
 
 function resolveSingleQuery(
   templates: TemplateMeta[],
-  rawQuery: string,
+  rawQuery: string
 ): TemplateResolutionMatch[] | TemplateResolutionIssue[] {
-  const expandedQueries = expandAliases(rawQuery).map((value) => normalize(value));
+  const expandedQueries = expandAliases(rawQuery).map((value) =>
+    normalize(value)
+  );
   const rawNormalized = normalize(rawQuery);
 
   const directQueries = [...new Set([...expandedQueries, rawNormalized])];
@@ -133,12 +148,14 @@ function resolveSingleQuery(
       return [{ template: exactCandidates[0] }];
     }
     if (exactCandidates.length > 1) {
-      return [{
-        query,
-        rawQuery,
-        type: "ambiguous",
-        matches: exactCandidates
-      }];
+      return [
+        {
+          query,
+          rawQuery,
+          type: "ambiguous",
+          matches: exactCandidates,
+        },
+      ];
     }
 
     const candidates = makeMatchQueryCandidates(templates, query);
@@ -146,32 +163,38 @@ function resolveSingleQuery(
       return [{ template: candidates[0] }];
     }
     if (candidates.length > 1) {
-      return [{
-        query,
-        rawQuery,
-        type: "ambiguous",
-        matches: candidates
-      }];
+      return [
+        {
+          query,
+          rawQuery,
+          type: "ambiguous",
+          matches: candidates,
+        },
+      ];
     }
   }
 
-  const fallbackCandidates = directQueries.flatMap((query) => makeFallbackCandidates(templates, query));
+  const fallbackCandidates = directQueries.flatMap((query) =>
+    makeFallbackCandidates(templates, query)
+  );
   const dedupedFallback = dedupeTemplateIds(fallbackCandidates);
   if (dedupedFallback.length === 1) {
     return [{ template: dedupedFallback[0] }];
   }
 
-  return [{
-    query: directQueries[0] ?? rawNormalized,
-    rawQuery,
-    type: "unknown",
-    matches: dedupedFallback.slice(0, 8)
-  }];
+  return [
+    {
+      query: directQueries[0] ?? rawNormalized,
+      rawQuery,
+      type: "unknown",
+      matches: dedupedFallback.slice(0, 8),
+    },
+  ];
 }
 
 export function resolveTemplateQueries(
   templates: TemplateMeta[],
-  rawQueries: string[],
+  rawQueries: string[]
 ): TemplateResolutionResult {
   const selected: TemplateMeta[] = [];
   const issues: TemplateResolutionIssue[] = [];
@@ -180,7 +203,9 @@ export function resolveTemplateQueries(
 
   for (const rawQuery of rawQueries) {
     const trimmedQuery = rawQuery.trim();
-    if (trimmedQuery.length === 0) continue;
+    if (trimmedQuery.length === 0) {
+      continue;
+    }
 
     const resolutions = resolveSingleQuery(templates, trimmedQuery);
     const first = resolutions[0];
@@ -203,7 +228,9 @@ export function resolveTemplateQueries(
   return { selected, issues: [] };
 }
 
-export function renderTemplateResolutionMessage(issues: TemplateResolutionIssue[]): string {
+export function renderTemplateResolutionMessage(
+  issues: TemplateResolutionIssue[]
+): string {
   const lines: string[] = [];
 
   for (const issue of issues) {

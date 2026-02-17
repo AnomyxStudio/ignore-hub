@@ -1,23 +1,24 @@
 #!/usr/bin/env bun
 
+import { readFile, writeFile } from "node:fs/promises";
 import { createCliRenderer } from "@opentui/core";
 import { createRoot } from "@opentui/react";
-import { readFile, writeFile } from "node:fs/promises";
-import { App } from "./app/App";
-import { detectProjectTemplates } from "./cli/projectDetector";
-import {
-  buildUsageText,
-  parseCliOptions
-} from "./cli/parseArgs";
+import { App } from "./app/app";
+import { buildUsageText, parseCliOptions } from "./cli/parse-args";
+import { detectProjectTemplates } from "./cli/project-detector";
 import {
   renderTemplateResolutionMessage,
-  resolveTemplateQueries
-} from "./cli/templateResolution";
-import { fetchTemplateSource } from "./data/githubClient";
-import { loadTemplateIndex } from "./data/cacheStore";
-import { mergeGitignore } from "./domain/mergeGitignore";
-import type { CliOptions, TemplateMeta, TemplateWithSource } from "./domain/types";
+  resolveTemplateQueries,
+} from "./cli/template-resolution";
+import { loadTemplateIndex } from "./data/cache-store";
+import { fetchTemplateSource } from "./data/github-client";
 import { normalizeTemplateName } from "./domain/classification";
+import { mergeGitignore } from "./domain/merge-gitignore";
+import type {
+  CliOptions,
+  TemplateMeta,
+  TemplateWithSource,
+} from "./domain/types";
 
 async function readExistingOutput(path: string): Promise<string | null> {
   try {
@@ -31,7 +32,7 @@ async function readExistingOutput(path: string): Promise<string | null> {
 }
 
 async function fetchTemplatesWithSource(
-  templates: TemplateMeta[],
+  templates: TemplateMeta[]
 ): Promise<TemplateWithSource[]> {
   const collected: TemplateWithSource[] = [];
   const failures: string[] = [];
@@ -46,7 +47,9 @@ async function fetchTemplatesWithSource(
   }
 
   if (failures.length > 0) {
-    throw new Error(`Failed to fetch template source for: ${failures.join(", ")}`);
+    throw new Error(
+      `Failed to fetch template source for: ${failures.join(", ")}`
+    );
   }
 
   return collected;
@@ -59,41 +62,57 @@ function hasSelectionModeOptions(options: CliOptions): boolean {
 async function runDirectGeneration(options: CliOptions): Promise<void> {
   const indexResult = await loadTemplateIndex(options.refresh);
   const availableTemplateIds = new Set(
-    indexResult.index.templates.map((template) => normalizeTemplateName(template.id)),
+    indexResult.index.templates.map((template) =>
+      normalizeTemplateName(template.id)
+    )
   );
   const autoTemplateCandidates = options.auto
     ? await detectProjectTemplates(process.cwd())
     : [];
   const supportedAutoTemplates = options.auto
-    ? autoTemplateCandidates.filter((id) => availableTemplateIds.has(normalizeTemplateName(id)))
+    ? autoTemplateCandidates.filter((id) =>
+        availableTemplateIds.has(normalizeTemplateName(id))
+      )
     : [];
-  const requestedTemplateNames = [...options.templates, ...supportedAutoTemplates];
+  const requestedTemplateNames = [
+    ...options.templates,
+    ...supportedAutoTemplates,
+  ];
 
   if (requestedTemplateNames.length === 0) {
     throw new Error("No templates resolved. Use --template <names> or --auto.");
   }
 
-  const resolution = resolveTemplateQueries(indexResult.index.templates, requestedTemplateNames);
+  const resolution = resolveTemplateQueries(
+    indexResult.index.templates,
+    requestedTemplateNames
+  );
   if (resolution.issues.length > 0) {
     throw new Error(renderTemplateResolutionMessage(resolution.issues));
   }
 
-  const templatesWithSource = await fetchTemplatesWithSource(resolution.selected);
+  const templatesWithSource = await fetchTemplatesWithSource(
+    resolution.selected
+  );
   const existingContent = await readExistingOutput(options.output);
   const mergedContent = mergeGitignore({
     existingContent,
     templates: templatesWithSource,
     includeWatermark: options.includeWatermark,
-    useSimpleSectionSeparator: options.useSimpleSectionSeparator
+    useSimpleSectionSeparator: options.useSimpleSectionSeparator,
   });
 
   if (options.stdout) {
-    process.stdout.write(mergedContent.endsWith("\n") ? mergedContent : `${mergedContent}\n`);
+    process.stdout.write(
+      mergedContent.endsWith("\n") ? mergedContent : `${mergedContent}\n`
+    );
     return;
   }
 
   await writeFile(options.output, mergedContent, "utf8");
-  process.stdout.write(`✅ IgnoreHub: generated .gitignore at ${options.output}\n`);
+  process.stdout.write(
+    `✅ IgnoreHub: generated .gitignore at ${options.output}\n`
+  );
 }
 
 async function main(): Promise<void> {
@@ -103,7 +122,11 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (parsed.options.nonInteractive && !parsed.options.auto && parsed.options.templates.length === 0) {
+  if (
+    parsed.options.nonInteractive &&
+    !parsed.options.auto &&
+    parsed.options.templates.length === 0
+  ) {
     throw new Error("--no-interactive requires --template or --auto.");
   }
 

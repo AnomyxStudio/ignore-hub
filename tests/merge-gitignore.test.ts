@@ -1,30 +1,40 @@
 import { expect, test } from "bun:test";
+import { resolveTemplateQueries } from "../src/cli/template-resolution";
 import {
+  collectRuleSet,
   GENERATED_BLOCK_END,
   GENERATED_BLOCK_START,
-  collectRuleSet,
   mergeGitignore,
-  stripGeneratedBlock
-} from "../src/domain/mergeGitignore";
-import { resolveTemplateQueries } from "../src/cli/templateResolution";
+  stripGeneratedBlock,
+} from "../src/domain/merge-gitignore";
 import type { TemplateMeta, TemplateWithSource } from "../src/domain/types";
 
 const TEMPLATES: TemplateWithSource[] = [
   {
-    meta: { id: "Node", name: "Node", path: "Node.gitignore", kind: "framework" },
-    source: "# Node\nnode_modules/\ndist\n"
+    meta: {
+      id: "Node",
+      name: "Node",
+      path: "Node.gitignore",
+      kind: "framework",
+    },
+    source: "# Node\nnode_modules/\ndist\n",
   },
   {
-    meta: { id: "Nextjs", name: "Nextjs", path: "Nextjs.gitignore", kind: "framework" },
-    source: "# Next\n.next\ndist\n"
-  }
+    meta: {
+      id: "Nextjs",
+      name: "Nextjs",
+      path: "Nextjs.gitignore",
+      kind: "framework",
+    },
+    source: "# Next\n.next\ndist\n",
+  },
 ];
 
 test("keeps existing rules first and dedupes generated rules", () => {
   const existing = "# User rules\ndist\n.env\n";
   const merged = mergeGitignore({
     existingContent: existing,
-    templates: TEMPLATES
+    templates: TEMPLATES,
   });
 
   expect(merged).toContain("# User rules");
@@ -34,24 +44,30 @@ test("keeps existing rules first and dedupes generated rules", () => {
   expect(merged).toContain("### framework: Node");
   expect(merged).toContain("### framework: Nextjs");
 
-  const occurrences = merged.split("\n").filter((line) => line.trim() === "dist").length;
+  const occurrences = merged
+    .split("\n")
+    .filter((line) => line.trim() === "dist").length;
   expect(occurrences).toBe(1);
 });
 
 test("re-running merge replaces generated block instead of appending", () => {
   const firstPass = mergeGitignore({
     existingContent: "# Manual\nvenv/\n",
-    templates: TEMPLATES
+    templates: TEMPLATES,
   });
 
   const secondPass = mergeGitignore({
     existingContent: firstPass,
-    templates: TEMPLATES
+    templates: TEMPLATES,
   });
 
   expect(secondPass).toBe(firstPass);
-  expect(secondPass.match(new RegExp(GENERATED_BLOCK_START, "g"))?.length).toBe(1);
-  expect(secondPass.match(new RegExp(GENERATED_BLOCK_END, "g"))?.length).toBe(1);
+  expect(secondPass.match(new RegExp(GENERATED_BLOCK_START, "g"))?.length).toBe(
+    1
+  );
+  expect(secondPass.match(new RegExp(GENERATED_BLOCK_END, "g"))?.length).toBe(
+    1
+  );
 });
 
 test("stripGeneratedBlock preserves manual content", () => {
@@ -71,7 +87,7 @@ test("can disable watermark markers while still generating sections", () => {
   const merged = mergeGitignore({
     existingContent: "# Manual\n",
     templates: TEMPLATES,
-    includeWatermark: false
+    includeWatermark: false,
   });
 
   expect(merged).toContain("### framework: Node");
@@ -84,7 +100,7 @@ test("uses simple separators when requested", () => {
   const merged = mergeGitignore({
     existingContent: "# Manual\n",
     templates: TEMPLATES,
-    useSimpleSectionSeparator: true
+    useSimpleSectionSeparator: true,
   });
 
   expect(merged).toContain("## Node");
@@ -94,36 +110,48 @@ test("uses simple separators when requested", () => {
 
 const TEMPLATE_INDEX: TemplateMeta[] = [
   { id: "Node", name: "Node", path: "Node.gitignore", kind: "framework" },
-  { id: "JavaScript", name: "JavaScript", path: "JavaScript.gitignore", kind: "language" },
+  {
+    id: "JavaScript",
+    name: "JavaScript",
+    path: "JavaScript.gitignore",
+    kind: "language",
+  },
   { id: "Nextjs", name: "Nextjs", path: "Nextjs.gitignore", kind: "framework" },
 ];
 
 test("resolves templates and merges with existing .gitignore rules", () => {
   const resolution = resolveTemplateQueries(TEMPLATE_INDEX, ["js", "nextjs"]);
   expect(resolution.issues).toEqual([]);
-  expect(resolution.selected.map((template) => template.id)).toEqual(["JavaScript", "Nextjs"]);
+  expect(resolution.selected.map((template) => template.id)).toEqual([
+    "JavaScript",
+    "Nextjs",
+  ]);
 
-  const resolvedTemplates: TemplateWithSource[] = resolution.selected.map((template) => {
-    if (template.id === "JavaScript") {
+  const resolvedTemplates: TemplateWithSource[] = resolution.selected.map(
+    (template) => {
+      if (template.id === "JavaScript") {
+        return {
+          meta: template,
+          source: "# JavaScript\nnode_modules/\n",
+        };
+      }
+
       return {
         meta: template,
-        source: "# JavaScript\nnode_modules/\n"
+        source: "# Nextjs\n.next\ndist/\n",
       };
     }
-
-    return {
-      meta: template,
-      source: "# Nextjs\n.next\ndist/\n"
-    };
-  });
+  );
 
   const merged = mergeGitignore({
     existingContent: "# Manual\nnode_modules/\n",
-    templates: resolvedTemplates
+    templates: resolvedTemplates,
   });
 
   expect(merged).toContain("### framework: Nextjs");
   expect(merged).toContain("### language: JavaScript");
   expect(merged).toContain("# Manual");
-  expect(merged.indexOf("node_modules/")).toBe(merged.lastIndexOf("node_modules/"));
+  expect(merged.indexOf("node_modules/")).toBe(
+    merged.lastIndexOf("node_modules/")
+  );
 });

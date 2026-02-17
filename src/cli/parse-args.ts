@@ -38,6 +38,36 @@ export function buildUsageText(): string {
   ].join("\n");
 }
 
+function getRequiredValue(argv: string[], index: number, flag: string): string {
+  const value = argv[index + 1];
+  if (!value || value.startsWith("--")) {
+    throw new Error(`Missing value for ${flag}`);
+  }
+  return value;
+}
+
+function addTemplateValueFromArg(
+  argv: string[],
+  index: number,
+  templates: string[]
+): number {
+  const value = getRequiredValue(argv, index, "--template");
+  addTemplateValues(value, templates);
+  return index + 1;
+}
+
+function addTemplateValueFromAssignment(
+  arg: string,
+  templates: string[]
+): void {
+  const separatorIndex = arg.indexOf("=");
+  const value = arg.slice(separatorIndex + 1);
+  if (value.length === 0) {
+    throw new Error("Missing value for --template");
+  }
+  addTemplateValues(value, templates);
+}
+
 export function parseCliOptions(argv: string[]): ParseResult {
   let output = resolve(process.cwd(), ".gitignore");
   let refresh = false;
@@ -52,73 +82,55 @@ export function parseCliOptions(argv: string[]): ParseResult {
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
 
-    if (arg === "-h" || arg === "--help") {
-      showHelp = true;
-      continue;
-    }
-
-    if (arg === "--refresh") {
-      refresh = true;
-      continue;
-    }
-
-    if (arg === "--stdout") {
-      stdout = true;
-      continue;
-    }
-
-    if (arg === "-a" || arg === "--auto") {
-      auto = true;
-      continue;
-    }
-
-    if (arg === "--no-interactive") {
-      nonInteractive = true;
-      continue;
-    }
-
-    if (arg === "-s" || arg === "--simple-sepration") {
-      useSimpleSectionSeparator = true;
-      includeWatermark = false;
-      continue;
-    }
-
-    if (arg === "-t" || arg === "--template") {
-      const value = argv[index + 1];
-      if (!value || value.startsWith("--")) {
-        throw new Error("Missing value for --template");
-      }
-      addTemplateValues(value, templates);
-      index += 1;
-      continue;
-    }
-
     if (!arg) {
       continue;
     }
 
-    if (arg.startsWith("-t=") || arg.startsWith("--template=")) {
-      const separatorIndex = arg.indexOf("=");
-      const rawValue = arg.slice(separatorIndex + 1);
-      if (rawValue.length === 0) {
-        throw new Error("Missing value for --template");
-      }
-      addTemplateValues(rawValue, templates);
-      continue;
+    if (!arg.startsWith("-")) {
+      throw new Error(`Unknown argument: ${arg}`);
     }
 
-    if (arg === "--output" || arg === "-o") {
-      const outputArg = argv[index + 1];
-      if (!outputArg || outputArg.startsWith("--")) {
-        throw new Error("Missing value for --output");
+    switch (arg) {
+      case "-h":
+      case "--help":
+        showHelp = true;
+        break;
+      case "--refresh":
+        refresh = true;
+        break;
+      case "--stdout":
+        stdout = true;
+        break;
+      case "-a":
+      case "--auto":
+        auto = true;
+        break;
+      case "--no-interactive":
+        nonInteractive = true;
+        break;
+      case "-s":
+      case "--simple-sepration":
+        useSimpleSectionSeparator = true;
+        includeWatermark = false;
+        break;
+      case "-o":
+      case "--output": {
+        const outputValue = getRequiredValue(argv, index, "--output");
+        output = resolve(process.cwd(), outputValue);
+        index += 1;
+        break;
       }
-
-      output = resolve(process.cwd(), outputArg);
-      index += 1;
-      continue;
+      case "-t":
+      case "--template":
+        index = addTemplateValueFromArg(argv, index, templates);
+        break;
+      default:
+        if (arg.startsWith("-t=") || arg.startsWith("--template=")) {
+          addTemplateValueFromAssignment(arg, templates);
+          break;
+        }
+        throw new Error(`Unknown argument: ${arg}`);
     }
-
-    throw new Error(`Unknown argument: ${arg}`);
   }
 
   return {

@@ -2,6 +2,7 @@ import type { CacheIndex, TemplateKind, TemplateMeta } from "./types";
 
 const ROOT_TEMPLATE_PATTERN = /^[^/]+\.gitignore$/;
 const GLOBAL_TEMPLATE_PATTERN = /^Global\/.+\.gitignore$/;
+const GITIGNORE_FILE_SUFFIX = /\.gitignore$/;
 
 const LANGUAGE_TEMPLATE_NAMES = new Set(
   [
@@ -51,7 +52,7 @@ const LANGUAGE_TEMPLATE_NAMES = new Set(
     "Swift",
     "TeX",
     "VBA",
-    "Zig"
+    "Zig",
   ].map(normalizeTemplateName)
 );
 
@@ -97,7 +98,7 @@ const FRAMEWORK_TEMPLATE_NAMES = new Set(
     "WordPress",
     "Yeoman",
     "Yii",
-    "ZendFramework"
+    "ZendFramework",
   ].map(normalizeTemplateName)
 );
 
@@ -128,7 +129,7 @@ const LANGUAGE_HINTS = [
   "cplusplus",
   "objectivec",
   "actionscript",
-  "typescript"
+  "typescript",
 ];
 
 export function normalizeTemplateName(name: string): string {
@@ -140,7 +141,7 @@ export function isSupportedTemplatePath(path: string): boolean {
 }
 
 export function getTemplateNameFromPath(path: string): string {
-  const cleanedPath = path.replace(/\.gitignore$/, "");
+  const cleanedPath = path.replace(GITIGNORE_FILE_SUFFIX, "");
   if (cleanedPath.startsWith("Global/")) {
     return cleanedPath.slice("Global/".length);
   }
@@ -148,7 +149,7 @@ export function getTemplateNameFromPath(path: string): string {
 }
 
 export function getTemplateIdFromPath(path: string): string {
-  const cleanedPath = path.replace(/\.gitignore$/, "");
+  const cleanedPath = path.replace(GITIGNORE_FILE_SUFFIX, "");
   if (cleanedPath.startsWith("Global/")) {
     return cleanedPath;
   }
@@ -186,7 +187,7 @@ export function classifyTemplatePath(path: string): TemplateMeta | null {
       id,
       name,
       path,
-      kind: "global"
+      kind: "global",
     };
   }
 
@@ -194,7 +195,7 @@ export function classifyTemplatePath(path: string): TemplateMeta | null {
     id,
     name,
     path,
-    kind: classifyRootTemplate(name)
+    kind: classifyRootTemplate(name),
   };
 }
 
@@ -217,6 +218,6 @@ export function buildCacheIndex(paths: string[]): CacheIndex {
   return {
     fetchedAt: new Date().toISOString(),
     sourceRef: "main",
-    templates
+    templates,
   };
 }

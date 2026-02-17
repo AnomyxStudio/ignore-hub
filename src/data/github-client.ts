@@ -17,8 +17,8 @@ async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url, {
     headers: {
       Accept: "application/vnd.github+json",
-      "User-Agent": "ignore-hub"
-    }
+      "User-Agent": "ignore-hub",
+    },
   });
 
   if (!response.ok) {
@@ -35,7 +35,8 @@ export async function fetchTemplatePaths(): Promise<string[]> {
     .filter((entry) => entry.type === "blob")
     .map((entry) => entry.path)
     .filter(
-      (path) => ROOT_TEMPLATE_PATTERN.test(path) || GLOBAL_TEMPLATE_PATTERN.test(path)
+      (path) =>
+        ROOT_TEMPLATE_PATTERN.test(path) || GLOBAL_TEMPLATE_PATTERN.test(path)
     )
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 }
@@ -50,8 +51,8 @@ export async function fetchTemplateSource(path: string): Promise<string> {
   const response = await fetch(url, {
     headers: {
       Accept: "text/plain",
-      "User-Agent": "ignore-hub"
-    }
+      "User-Agent": "ignore-hub",
+    },
   });
 
   if (!response.ok) {

@@ -3,8 +3,8 @@ import {
   isEnterKey,
   moveCursor,
   toggleTemplateSelection,
-} from "../src/app/App";
-import { filterItems } from "../src/app/steps/MultiSelectStep";
+} from "../src/app/app";
+import { filterItems } from "../src/app/steps/multi-select-step";
 import type { TemplateMeta } from "../src/domain/types";
 
 test("cursor movement clamps to list bounds", () => {
@@ -33,32 +33,46 @@ test("enter key accepts enter and return aliases", () => {
 test("filterItems narrows templates by case-insensitive match", () => {
   const templates: TemplateMeta[] = [
     { id: "Node", name: "Node", kind: "framework", path: "Node.gitignore" },
-    { id: "Nextjs", name: "Nextjs", kind: "framework", path: "Nextjs.gitignore" },
-    { id: "Python", name: "Python", kind: "language", path: "Python.gitignore" },
+    {
+      id: "Nextjs",
+      name: "Nextjs",
+      kind: "framework",
+      path: "Nextjs.gitignore",
+    },
+    {
+      id: "Python",
+      name: "Python",
+      kind: "language",
+      path: "Python.gitignore",
+    },
   ];
 
   expect(filterItems(templates, "").length).toBe(3);
-  expect(filterItems(templates, "next").map((item: TemplateMeta) => item.name)).toEqual([
-    "Nextjs",
-  ]);
-  expect(filterItems(templates, "python").map((item: TemplateMeta) => item.name)).toEqual([
-    "Python",
-  ]);
+  expect(
+    filterItems(templates, "next").map((item: TemplateMeta) => item.name)
+  ).toEqual(["Nextjs"]);
+  expect(
+    filterItems(templates, "python").map((item: TemplateMeta) => item.name)
+  ).toEqual(["Python"]);
 });
 
 test("filterItems can search by kind", () => {
   const templates: TemplateMeta[] = [
     { id: "Node", name: "Node", kind: "framework", path: "Node.gitignore" },
-    { id: "Python", name: "Python", kind: "language", path: "Python.gitignore" },
+    {
+      id: "Python",
+      name: "Python",
+      kind: "language",
+      path: "Python.gitignore",
+    },
     { id: "Rust", name: "Rust", kind: "language", path: "Rust.gitignore" },
   ];
 
-  expect(filterItems(templates, "lang").map((item: TemplateMeta) => item.name)).toEqual([
-    "Python",
-    "Rust",
-  ]);
+  expect(
+    filterItems(templates, "lang").map((item: TemplateMeta) => item.name)
+  ).toEqual(["Python", "Rust"]);
   expect(filterItems(templates, "fw").length).toBe(0); // "fw" not in the haystack
-  expect(filterItems(templates, "framework").map((item: TemplateMeta) => item.name)).toEqual([
-    "Node",
-  ]);
+  expect(
+    filterItems(templates, "framework").map((item: TemplateMeta) => item.name)
+  ).toEqual(["Node"]);
 });

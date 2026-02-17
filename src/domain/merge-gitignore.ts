@@ -42,7 +42,9 @@ function trimTrailingBlankLines(lines: string[]): string[] {
 
 export function stripGeneratedBlock(content: string): string {
   const normalized = normalizeNewlines(content);
-  const withoutGenerated = normalized.replace(GENERATED_BLOCK_PATTERN, "").trimEnd();
+  const withoutGenerated = normalized
+    .replace(GENERATED_BLOCK_PATTERN, "")
+    .trimEnd();
   return withoutGenerated;
 }
 
@@ -60,7 +62,10 @@ export function collectRuleSet(content: string): Set<string> {
   return rules;
 }
 
-function dedupeTemplateSourceLines(source: string, seenRules: Set<string>): string[] {
+function dedupeTemplateSourceLines(
+  source: string,
+  seenRules: Set<string>
+): string[] {
   const output: string[] = [];
   const normalized = normalizeNewlines(source);
 
@@ -84,7 +89,7 @@ function dedupeTemplateSourceLines(source: string, seenRules: Set<string>): stri
 
 function getSectionHeader(
   template: TemplateWithSource,
-  useSimpleSectionSeparator: boolean,
+  useSimpleSectionSeparator: boolean
 ): string {
   if (useSimpleSectionSeparator) {
     return `## ${template.meta.name}`;
@@ -96,7 +101,7 @@ function getSectionHeader(
 function buildGeneratedBlock(
   templates: TemplateWithSource[],
   existingRules: Set<string>,
-  options: MergeGitignoreOptions,
+  options: MergeGitignoreOptions
 ): string {
   const lines: string[] = [];
 
@@ -107,7 +112,10 @@ function buildGeneratedBlock(
   for (const template of templates) {
     lines.push(getSectionHeader(template, options.useSimpleSectionSeparator));
 
-    const sectionLines = dedupeTemplateSourceLines(template.source, existingRules);
+    const sectionLines = dedupeTemplateSourceLines(
+      template.source,
+      existingRules
+    );
     if (sectionLines.length > 0) {
       lines.push(...sectionLines);
     }
@@ -115,7 +123,7 @@ function buildGeneratedBlock(
     lines.push("");
   }
 
-  if (lines[lines.length - 1] === "") {
+  if (lines.at(-1) === "") {
     lines.pop();
   }
 
@@ -141,8 +149,8 @@ function composeOutput(manualContent: string, generatedBlock: string): string {
 
 interface MergeGitignoreInput {
   existingContent: string | null;
-  templates: TemplateWithSource[];
   includeWatermark?: boolean;
+  templates: TemplateWithSource[];
   useSimpleSectionSeparator?: boolean;
 }
 
@@ -150,14 +158,14 @@ export function mergeGitignore({
   existingContent,
   templates,
   includeWatermark = true,
-  useSimpleSectionSeparator = false
+  useSimpleSectionSeparator = false,
 }: MergeGitignoreInput): string {
   const source = existingContent ?? "";
   const manualContent = stripGeneratedBlock(source);
   const existingRules = collectRuleSet(manualContent);
   const generatedBlock = buildGeneratedBlock(templates, existingRules, {
     includeWatermark,
-    useSimpleSectionSeparator
+    useSimpleSectionSeparator,
   });
 
   return composeOutput(manualContent, generatedBlock);

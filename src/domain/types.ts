@@ -2,9 +2,9 @@ export type TemplateKind = "language" | "framework" | "global";
 
 export interface TemplateMeta {
   id: string;
+  kind: TemplateKind;
   name: string;
   path: string;
-  kind: TemplateKind;
 }
 
 export interface CacheIndex {
@@ -14,13 +14,13 @@ export interface CacheIndex {
 }
 
 export interface CliOptions {
+  auto: boolean;
+  includeWatermark: boolean;
+  nonInteractive: boolean;
   output: string;
   refresh: boolean;
   stdout: boolean;
   templates: string[];
-  auto: boolean;
-  nonInteractive: boolean;
-  includeWatermark: boolean;
   useSimpleSectionSeparator: boolean;
 }
 

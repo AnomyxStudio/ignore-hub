@@ -2,8 +2,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { buildCacheIndex } from "../domain/classification";
-import type { CacheIndex, IndexLoadResult, TemplateMeta } from "../domain/types";
-import { fetchTemplatePaths } from "./githubClient";
+import type {
+  CacheIndex,
+  IndexLoadResult,
+  TemplateMeta,
+} from "../domain/types";
+import { fetchTemplatePaths } from "./github-client";
 
 const CACHE_FILE_PATH = join(homedir(), ".cache", "ignore-hub", "index.json");
 
@@ -76,13 +80,15 @@ export async function refreshTemplateIndex(): Promise<CacheIndex> {
   return index;
 }
 
-export async function loadTemplateIndex(refresh: boolean): Promise<IndexLoadResult> {
+export async function loadTemplateIndex(
+  refresh: boolean
+): Promise<IndexLoadResult> {
   if (!refresh) {
     const cached = await readCacheIndex();
     if (cached) {
       return {
         index: cached,
-        source: "cache"
+        source: "cache",
       };
     }
   }
@@ -91,7 +97,7 @@ export async function loadTemplateIndex(refresh: boolean): Promise<IndexLoadResu
     const index = await refreshTemplateIndex();
     return {
       index,
-      source: "network"
+      source: "network",
     };
   } catch (error) {
     const fallback = await readCacheIndex();
@@ -99,7 +105,7 @@ export async function loadTemplateIndex(refresh: boolean): Promise<IndexLoadResu
       return {
         index: fallback,
         source: "cache",
-        warning: `Network refresh failed, using cache. ${formatError(error)}`
+        warning: `Network refresh failed, using cache. ${formatError(error)}`,
       };
     }
 

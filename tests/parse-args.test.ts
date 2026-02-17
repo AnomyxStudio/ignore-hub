@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { parseCliOptions } from "../src/cli/parseArgs";
+import { parseCliOptions } from "../src/cli/parse-args";
 
 test("parses comma-separated template names", () => {
   const result = parseCliOptions(["-t", "unity,node, java"]);
@@ -22,7 +22,9 @@ test("removes empty values from comma-separated input", () => {
 });
 
 test("throws on missing template value", () => {
-  expect(() => parseCliOptions(["--template"])).toThrow("Missing value for --template");
+  expect(() => parseCliOptions(["--template"])).toThrow(
+    "Missing value for --template"
+  );
 });
 
 test("parses --template with equals notation", () => {
@@ -65,12 +67,7 @@ test("supports short alias for simple separator", () => {
 });
 
 test("allows template simplicity flag to adjust both separators and watermark", () => {
-  const result = parseCliOptions([
-    "-t",
-    "node",
-    "-a",
-    "-s"
-  ]);
+  const result = parseCliOptions(["-t", "node", "-a", "-s"]);
   expect(result.options.templates).toEqual(["node"]);
   expect(result.options.auto).toBe(true);
   expect(result.options.includeWatermark).toBe(false);

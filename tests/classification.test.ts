@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 import {
-  classifyTemplatePath,
   classifyRootTemplate,
+  classifyTemplatePath,
   getTemplateIdFromPath,
   getTemplateNameFromPath,
-  isSupportedTemplatePath
+  isSupportedTemplatePath,
 } from "../src/domain/classification";
 
 test("classifies Python template as language", () => {
@@ -31,14 +31,20 @@ test("defaults unknown root template to framework", () => {
 
 test("parses names and ids from paths", () => {
   expect(getTemplateNameFromPath("Node.gitignore")).toBe("Node");
-  expect(getTemplateNameFromPath("Global/JetBrains.gitignore")).toBe("JetBrains");
+  expect(getTemplateNameFromPath("Global/JetBrains.gitignore")).toBe(
+    "JetBrains"
+  );
   expect(getTemplateIdFromPath("Node.gitignore")).toBe("Node");
-  expect(getTemplateIdFromPath("Global/JetBrains.gitignore")).toBe("Global/JetBrains");
+  expect(getTemplateIdFromPath("Global/JetBrains.gitignore")).toBe(
+    "Global/JetBrains"
+  );
 });
 
 test("supports only root and Global template paths", () => {
   expect(isSupportedTemplatePath("Node.gitignore")).toBe(true);
   expect(isSupportedTemplatePath("Global/Linux.gitignore")).toBe(true);
-  expect(isSupportedTemplatePath("community/JavaScript/Node.gitignore")).toBe(false);
+  expect(isSupportedTemplatePath("community/JavaScript/Node.gitignore")).toBe(
+    false
+  );
   expect(isSupportedTemplatePath("README.md")).toBe(false);
 });
