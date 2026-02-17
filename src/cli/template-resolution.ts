@@ -145,7 +145,10 @@ function resolveSingleQuery(
   for (const query of directQueries) {
     const exactCandidates = makeExactCandidates(templates, query);
     if (exactCandidates.length === 1) {
-      return [{ template: exactCandidates[0] }];
+      const match = exactCandidates[0];
+      if (match) {
+        return [{ template: match }];
+      }
     }
     if (exactCandidates.length > 1) {
       return [
@@ -160,7 +163,10 @@ function resolveSingleQuery(
 
     const candidates = makeMatchQueryCandidates(templates, query);
     if (candidates.length === 1) {
-      return [{ template: candidates[0] }];
+      const match = candidates[0];
+      if (match) {
+        return [{ template: match }];
+      }
     }
     if (candidates.length > 1) {
       return [
@@ -179,7 +185,10 @@ function resolveSingleQuery(
   );
   const dedupedFallback = dedupeTemplateIds(fallbackCandidates);
   if (dedupedFallback.length === 1) {
-    return [{ template: dedupedFallback[0] }];
+    const match = dedupedFallback[0];
+    if (match) {
+      return [{ template: match }];
+    }
   }
 
   return [
@@ -209,6 +218,9 @@ export function resolveTemplateQueries(
 
     const resolutions = resolveSingleQuery(templates, trimmedQuery);
     const first = resolutions[0];
+    if (!first) {
+      continue;
+    }
     if ("template" in first) {
       const template = first.template;
       if (!seen.has(template.id)) {
