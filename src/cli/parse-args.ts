@@ -4,6 +4,7 @@ import type { CliOptions } from "../domain/types";
 interface ParseResult {
   options: CliOptions;
   showHelp: boolean;
+  showVersion: boolean;
 }
 
 function addTemplateValues(values: string, target: string[]): void {
@@ -27,14 +28,15 @@ export function buildUsageText(): string {
     "  ih [options]",
     "",
     "Options:",
-    "  --output <path>, -o     📝 Write output file path (default: ./.gitignore)",
-    "  --refresh               🔄 Refresh template index from GitHub",
-    "  --stdout                📤 Print generated result to stdout instead of writing file",
-    "  -t, --template <names>  🗂 Select templates directly (comma separated or repeated)",
-    "  -a, --auto             🤖 Detect templates from current project layout",
-    "  -s, --simple-sepration Toggle template headers to `## <Template>` and omit IGNORE-HUB watermarks",
-    "  --no-interactive        ⚡ Skip TUI and run in direct generation mode",
-    "  -h, --help              ❓ Show help",
+    "  --output <path>, -o      📝 Write output file path (default: ./.gitignore)",
+    "  --refresh                🔄 Refresh template index from GitHub",
+    "  --stdout                 📤 Print generated result to stdout instead of writing file",
+    "  -t, --template <names>   🗂  Select templates directly (comma separated or repeated)",
+    "  -a, --auto               🤖 Detect templates from current project layout",
+    "  -s, --simple-sepration   📋 Toggle template headers to `## <Template>` and omit IGNORE-HUB watermarks",
+    "  --no-interactive         🚀 Skip TUI and run in direct generation mode",
+    "  -h, --help               ❓ Show help",
+    "  -v, --version            🧭 Print installed version",
   ].join("\n");
 }
 
@@ -78,6 +80,7 @@ export function parseCliOptions(argv: string[]): ParseResult {
   let includeWatermark = true;
   let useSimpleSectionSeparator = false;
   let showHelp = false;
+  let showVersion = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -94,6 +97,10 @@ export function parseCliOptions(argv: string[]): ParseResult {
       case "-h":
       case "--help":
         showHelp = true;
+        break;
+      case "-v":
+      case "--version":
+        showVersion = true;
         break;
       case "--refresh":
         refresh = true;
@@ -145,5 +152,6 @@ export function parseCliOptions(argv: string[]): ParseResult {
       useSimpleSectionSeparator,
     },
     showHelp,
+    showVersion,
   };
 }

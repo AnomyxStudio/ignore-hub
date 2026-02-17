@@ -1,22 +1,10 @@
 {
   "name": "ignore-hub",
-  "version": "0.2.0",
-  "description": "Interactive OpenTUI wizard to generate .gitignore from github/gitignore",
-  "type": "module",
-  "license": "MIT",
+  "version": "0.2.3",
   "private": false,
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "dev": "bun run --watch src/index.tsx",
-    "start": "bun run src/index.tsx",
-    "test": "bun test",
-    "typecheck": "bunx tsc --noEmit",
-    "prepublishOnly": "bun run typecheck && bun run test",
-    "check": "ultracite check",
-    "fix": "ultracite fix"
-  },
+  "description": "Interactive OpenTUI wizard to generate .gitignore from github/gitignore",
+  "license": "MIT",
+  "type": "module",
   "bin": {
     "ignore-hub": "./src/index.tsx",
     "ih": "./src/index.tsx"
@@ -28,21 +16,35 @@
     "LICENSE",
     "package.json"
   ],
-  "engines": {
-    "bun": ">=1.2.0"
+  "scripts": {
+    "build:bin": "bun run scripts/build-binary.ts",
+    "check": "ultracite check",
+    "dev": "bun run --watch src/index.tsx",
+    "fix": "ultracite fix",
+    "prepublishOnly": "bun run typecheck && bun run test",
+    "start": "bun run src/index.tsx",
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit"
   },
   "dependencies": {
     "@opentui/core": "^0.1.79",
-    "@opentui/react": "^0.1.79",
-    "react": "^19.2.4"
+    "@opentui/react": "^0.1.79"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.0",
     "@types/bun": "latest",
     "@types/react": "^19.2.2",
+    "react": "^19.2.4",
     "ultracite": "7.2.3"
   },
   "peerDependencies": {
+    "react": ">=19.0.0",
     "typescript": "^5"
+  },
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

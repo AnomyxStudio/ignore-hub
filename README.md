@@ -3,6 +3,16 @@
 Interactive TUI CLI to generate `.gitignore` from
 [`github/gitignore`](https://github.com/github/gitignore).
 
+## Screenshots
+
+Template selection:
+
+![Template selection step](docs/screenshot-0.png)
+
+Preview + generate:
+
+![Preview and generate step](docs/screenshot-2.png)
+
 ## Install
 
 ### From npm
@@ -21,6 +31,25 @@ If global bin is not on PATH, run directly with:
 ```bash
 bunx ignore-hub
 bunx ih
+```
+
+### Standalone binary (no Bun required for end users)
+
+Build binaries with Bun once, then distribute the generated executable file(s):
+
+```bash
+# current platform target only
+bun run build:bin
+```
+
+Outputs are written to `dist/` (for example: `dist/ignore-hub-bun-darwin-arm64`).
+To release binaries for multiple platforms, run `bun run build:bin` on a matching
+OS/arch runner for each target (for example via CI matrix jobs).
+
+End users can run the binary directly without installing Bun:
+
+```bash
+./ignore-hub-bun-darwin-arm64 --help
 ```
 
 ### Local install (development)
@@ -51,6 +80,7 @@ Options:
 - `--refresh`: force refresh template index from GitHub
 - `--stdout`: print result to stdout instead of writing file
 - `-h, --help`: show help
+- `-v, --version`: print installed version
 - `-t, --template <names>`: select templates directly (comma-separated or repeated)
 - `-a, --auto`: detect templates from project structure
 - `-s, --simple-sepration`: output template section headers as `## Template` and skip generated markers
@@ -85,16 +115,6 @@ Examples:
   - `extension` (file extension with max recursion depth)
 
 To add a new project-to-template mapping, add a new rule in this list.
-
-## Publishing (for maintainers)
-
-1. Set a unique package name/metadata in `package.json` and bump `version`.
-2. `bun run prepublishOnly` (runs typecheck + tests)
-3. `npm login` (or `bun npm login`)
-4. `npm publish` / `bun publish`
-
-If your package scope is scoped (e.g. `@scope/ignore-hub`), add
-`publishConfig.access=public` to publish publicly.
 
 ## Repo
 

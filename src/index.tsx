@@ -20,6 +20,8 @@ import type {
   TemplateWithSource,
 } from "./domain/types";
 
+declare const __IGNORE_HUB_VERSION__: string | undefined;
+
 async function readExistingOutput(path: string): Promise<string | null> {
   try {
     return await readFile(path, "utf8");
@@ -29,6 +31,34 @@ async function readExistingOutput(path: string): Promise<string | null> {
     }
     throw error;
   }
+}
+
+async function readPackageVersion(): Promise<string> {
+  if (
+    typeof __IGNORE_HUB_VERSION__ !== "undefined" &&
+    __IGNORE_HUB_VERSION__.length > 0
+  ) {
+    return __IGNORE_HUB_VERSION__;
+  }
+
+  const packageManifest = new URL("../package.json", import.meta.url);
+  try {
+    const packageManifestContents = await readFile(packageManifest, "utf8");
+    const metadata = JSON.parse(packageManifestContents) as {
+      version?: string;
+    };
+
+    return metadata.version ?? "unknown";
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return "unknown";
+    }
+    throw error;
+  }
+}
+
+function isInteractiveCapable(): boolean {
+  return process.stdin.isTTY === true && process.stdout.isTTY === true;
 }
 
 async function fetchTemplatesWithSource(
@@ -121,6 +151,11 @@ async function main(): Promise<void> {
     process.stdout.write(`${buildUsageText()}\n`);
     return;
   }
+  if (parsed.showVersion) {
+    const version = await readPackageVersion();
+    process.stdout.write(`ignore-hub ${version}\n`);
+    return;
+  }
 
   if (
     parsed.options.nonInteractive &&
@@ -133,6 +168,12 @@ async function main(): Promise<void> {
   if (hasSelectionModeOptions(parsed.options)) {
     await runDirectGeneration(parsed.options);
     return;
+  }
+
+  if (!isInteractiveCapable()) {
+    throw new Error(
+      "Interactive mode requires a TTY. Use --no-interactive with --template or --auto."
+    );
   }
 
   const renderer = await createCliRenderer();

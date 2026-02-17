@@ -48,6 +48,17 @@ test("supports output alias -o", () => {
   expect(result.options.output.endsWith("/out/.gitignore")).toBe(true);
 });
 
+test("supports short alias for version flag", () => {
+  const result = parseCliOptions(["-v"]);
+  expect(result.showVersion).toBe(true);
+  expect(result.showHelp).toBe(false);
+});
+
+test("supports long alias for version flag", () => {
+  const result = parseCliOptions(["--version"]);
+  expect(result.showVersion).toBe(true);
+});
+
 test("defaults watermark on and simple separators off", () => {
   const result = parseCliOptions([]);
   expect(result.options.includeWatermark).toBe(true);
