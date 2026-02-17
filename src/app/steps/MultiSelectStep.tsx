@@ -2,15 +2,16 @@ import { TextAttributes } from "@opentui/core";
 import type { TemplateKind, TemplateMeta } from "../../domain/types";
 
 const C = {
-  accent: "#7aa2f7",
-  green: "#7ef9d1",
-  yellow: "#e0af68",
-  dim: "#565f89",
-  dimBorder: "#3b4261",
+  accent: "#66b395",
+  green: "#66b395",
+  yellow: "#e2c97e",
+  dim: "#999999",
+  dimBorder: "#444444",
+  selectedName: "#f6f6f6",
   badge: {
-    language: "#bb9af7",
-    framework: "#7aa2f7",
-    global: "#e0af68",
+    language: "#5fb5be",
+    framework: "#ed9cc2",
+    global: "#e7d38f",
   } as Record<TemplateKind, string>,
 };
 
@@ -129,7 +130,7 @@ export function MultiSelectStep({
             const checkbox = isSelected ? "[x]" : "[ ]";
             const { truncatedLeft, badge, padding } = layoutItem(prefix, checkbox, item.name, item.kind);
 
-            const nameFg = isCursor ? C.green : isSelected ? "#c0caf5" : undefined;
+            const nameFg = isCursor ? C.green : isSelected ? C.selectedName : undefined;
 
             return (
               <text key={item.id} attributes={isCursor ? TextAttributes.BOLD : undefined}>

@@ -11,12 +11,13 @@ import { PreviewStep } from "./steps/PreviewStep";
 
 // --- Color palette ---
 const C = {
-  accent: "#7aa2f7",
-  green: "#7ef9d1",
-  yellow: "#e0af68",
-  red: "#ff7a7a",
-  dim: "#565f89",
-  dimBorder: "#3b4261",
+  accent: "#66b395",
+  green: "#66b395",
+  yellow: "#e2c97e",
+  red: "#e47474",
+  dim: "#999999",
+  dimBorder: "#444444",
+  muted: "#7098d4",
 };
 
 export type WizardStep = "select" | "preview" | "done";
@@ -210,7 +211,12 @@ export function App({ options }: AppProps) {
 
     try {
       const existingContent = await readExistingOutput(options.output);
-      const merged = mergeGitignore({ existingContent, templates: templatesWithSource });
+      const merged = mergeGitignore({
+        existingContent,
+        templates: templatesWithSource,
+        includeWatermark: options.includeWatermark,
+        useSimpleSectionSeparator: options.useSimpleSectionSeparator
+      });
       setPreviewContent(merged);
       setPreviewStatus("ready");
       setStatusMessage("Preview ready. Press Enter to generate, Backspace to go back.");
@@ -390,10 +396,10 @@ export function App({ options }: AppProps) {
       <box marginBottom={1} flexDirection="column" flexShrink={0}>
         <text fg={C.accent} attributes={TextAttributes.BOLD}>Ignore Hub</text>
         <text fg={C.dim}>
-          Source: <span fg="#9aa5ce">github/gitignore</span> (Root + Global)
+          Source: <span fg={C.muted}>github/gitignore</span> (Root + Global)
         </text>
         <text fg={C.dim}>
-          Cache: <span fg="#9aa5ce">{resolveCacheFilePath()}</span>
+          Cache: <span fg={C.muted}>{resolveCacheFilePath()}</span>
         </text>
       </box>
 

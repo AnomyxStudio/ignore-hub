@@ -17,6 +17,11 @@ export interface CliOptions {
   output: string;
   refresh: boolean;
   stdout: boolean;
+  templates: string[];
+  auto: boolean;
+  nonInteractive: boolean;
+  includeWatermark: boolean;
+  useSimpleSectionSeparator: boolean;
 }
 
 export interface TemplateWithSource {

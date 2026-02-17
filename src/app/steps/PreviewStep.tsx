@@ -1,13 +1,13 @@
 import { TextAttributes } from "@opentui/core";
 
 const C = {
-  accent: "#7aa2f7",
-  green: "#7ef9d1",
-  yellow: "#e0af68",
-  red: "#ff7a7a",
-  redSoft: "#ffb3b3",
-  dim: "#565f89",
-  dimBorder: "#3b4261",
+  accent: "#66b395",
+  green: "#66b395",
+  yellow: "#e2c97e",
+  red: "#e47474",
+  redSoft: "#f48484",
+  dim: "#999999",
+  dimBorder: "#444444",
 };
 
 interface PreviewStepProps {

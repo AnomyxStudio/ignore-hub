@@ -6,7 +6,8 @@ import {
   mergeGitignore,
   stripGeneratedBlock
 } from "../src/domain/mergeGitignore";
-import type { TemplateWithSource } from "../src/domain/types";
+import { resolveTemplateQueries } from "../src/cli/templateResolution";
+import type { TemplateMeta, TemplateWithSource } from "../src/domain/types";
 
 const TEMPLATES: TemplateWithSource[] = [
   {
@@ -64,4 +65,65 @@ test("collectRuleSet includes only non-comment non-empty rules", () => {
   expect(rules.has("node_modules/")).toBe(true);
   expect(rules.has("dist")).toBe(true);
   expect(rules.has("# Comment")).toBe(false);
+});
+
+test("can disable watermark markers while still generating sections", () => {
+  const merged = mergeGitignore({
+    existingContent: "# Manual\n",
+    templates: TEMPLATES,
+    includeWatermark: false
+  });
+
+  expect(merged).toContain("### framework: Node");
+  expect(merged).toContain("### framework: Nextjs");
+  expect(merged).not.toContain(GENERATED_BLOCK_START);
+  expect(merged).not.toContain(GENERATED_BLOCK_END);
+});
+
+test("uses simple separators when requested", () => {
+  const merged = mergeGitignore({
+    existingContent: "# Manual\n",
+    templates: TEMPLATES,
+    useSimpleSectionSeparator: true
+  });
+
+  expect(merged).toContain("## Node");
+  expect(merged).toContain("## Nextjs");
+  expect(merged).not.toContain("### framework: Node");
+});
+
+const TEMPLATE_INDEX: TemplateMeta[] = [
+  { id: "Node", name: "Node", path: "Node.gitignore", kind: "framework" },
+  { id: "JavaScript", name: "JavaScript", path: "JavaScript.gitignore", kind: "language" },
+  { id: "Nextjs", name: "Nextjs", path: "Nextjs.gitignore", kind: "framework" },
+];
+
+test("resolves templates and merges with existing .gitignore rules", () => {
+  const resolution = resolveTemplateQueries(TEMPLATE_INDEX, ["js", "nextjs"]);
+  expect(resolution.issues).toEqual([]);
+  expect(resolution.selected.map((template) => template.id)).toEqual(["JavaScript", "Nextjs"]);
+
+  const resolvedTemplates: TemplateWithSource[] = resolution.selected.map((template) => {
+    if (template.id === "JavaScript") {
+      return {
+        meta: template,
+        source: "# JavaScript\nnode_modules/\n"
+      };
+    }
+
+    return {
+      meta: template,
+      source: "# Nextjs\n.next\ndist/\n"
+    };
+  });
+
+  const merged = mergeGitignore({
+    existingContent: "# Manual\nnode_modules/\n",
+    templates: resolvedTemplates
+  });
+
+  expect(merged).toContain("### framework: Nextjs");
+  expect(merged).toContain("### language: JavaScript");
+  expect(merged).toContain("# Manual");
+  expect(merged.indexOf("node_modules/")).toBe(merged.lastIndexOf("node_modules/"));
 });
